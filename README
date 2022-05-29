@@ -1,0 +1,209 @@
+---
+iTunesSD 3rd gen
+-- Write up the of database for the iPod shuffle 3rd & 4th gen
+---- writing this because the original is on a wiki that went down
+---- https://web.archive.org/web/20131016014401/http://shuffle3db.wikispaces.com/iTunesSD3gen
+---
+Usage & Placement & Meaning
+-- SD stands for Shuffle Database
+---- as such this is the database file the shuffle (3rd/4th gen) uses
+-- It is found at <mount point>/iPod_Control/iTunes/iTunesSD
+-- Compared to the 2nd/1st gen versions it is very different with only the hexcode
+---- for file format remaining the same
+---
+Layout
+-- base layout of said iTunesSD file
+----------
+| Header |
+----------
+  |    ----------------
+  '->  | Track Header |
+       ----------------
+        |   -----------
+        '-> | Track 1 |
+            -----------
+        |
+        '-> ...
+  |    ----------------
+  '->  | Track Header |
+       ----------------
+        |
+        '-> ...
+  |    -------------------
+  '->  | Playlist Header |
+       -------------------
+        |   --------------
+        '-> | Playlist 1 |
+            --------------
+        |   --------------
+        '-> | Playlist 2 |
+            --------------
+---
+Hexcode Layout
+-- Follows same as above but with the literal values
+-- Values are in hex
+--------------------
+| bdhs  0300 0002  | Header
+--------------------
+ |   ---------------
+ '-> |  4000 0000  | Size of header | Always 4000 0000
+     ---------------
+ |   ---------------
+ '-> |  ??00 0000  | Numer of tracks | All 4 bytes may be used
+     ---------------
+ |   ---------------
+ '-> |  ??00 0000  | Number of Playlists | All 4 bytes may be used
+     ---------------
+ |   ---------------
+ '-> |  0000 0000  | Padding
+     |  0000 0000  |
+     ---------------
+ |   ---------------
+ '-> |     0 ?     | Volume Limit | 00 = UNSET | 03 = MIN | 02 = MAX 
+     ---------------
+ |   ---------------
+ '-> |     0 ?     | Voiceover Enabled | 1 = ENABLED | 0 = DISABLED
+     ---------------
+ |   ---------------
+ '-> |    00 00    | Padding (?)
+     ---------------
+ |   --------------- 
+ '-> |  ??00 0000  | Number of tracks | Without audiobooks/podcasts | All 4 bytes may be used
+     ---------------
+ |   ---------------
+ '-> |  4000 0000  | Offset
+     ---------------
+ |   ---------------
+ '-> |  64b9 0000  | Playlist Offset
+     ---------------
+ |   ---------------
+ '-> |  0000 0000  |
+     |  0000 0000  |
+     |  0000 0000  | Padding
+     |  0000 0000  |
+     |  0000 0000  | 
+     ---------------
+ -----------------
+ | END OF HEADER |
+ -----------------
+--------
+| hths | Track Header
+--------
+ |   ---------------
+ '-> |  ???? 0000  | Length
+     ---------------
+ |   ---------------
+ '-> |  ??00 0000  | Number of tracks | All 4 bytes may be used
+     ---------------
+ |   ---------------
+ '-> |  0000 0000  | Padding
+     |  0000 0000  |
+     ---------------
+ |   ---------------
+ '-> |  ???? 0000  | Offest 0 -> ... 
+     |  ???? 0000  |
+     |  ???? 0000  |
+     |  ???? 0000  |
+     |  ???? 0000  |
+     |  .... ....  |
+     ---------------
+ -----------------------
+ | END OF TRACK HEADER |
+ -----------------------
+--------
+| rths | Track #? Header | Repeats for each track
+--------
+ |   ---------------
+ '-> |  ???? 0000  | Length
+     ---------------
+ |   ---------------
+ '-> |  ???? ????  | Starting Position | MiliSeconds | Typically 0000 0000
+     ---------------
+ |   ---------------
+ '-> |  ???? ????  | Ending Position | Length of Track (or less) in MiliSeconds 
+     ---------------
+ |   ---------------
+ '-> |  0000 0000  | Volume gain | 00 -> 100
+     ---------------
+ |   ---------------
+ '-> |  0?00 0000  | File Type | 01 = MP3 | 02 = AAC,MP4,M4A | 04 = WAV
+     ---------------
+ |   ---------------
+ ->  |  ???? ????  | File Name | /iPod_Control/Music/???/NAME.TYPE
+     |  ???? ????  | 256 Bytes Max
+     |  ???? ????  |
+     |  ???? ????  |
+     |  ???? ????  |
+     |  ???? ????  |
+     |  ???? ????  |
+     |  .... ....  |
+     ---------------
+ |   ---------------
+ '-> |  0000 0000  | Bookmark | MiliSeconds | For Audiobooks
+     ---------------
+ |   ---------------
+ '-> |     0 ?     | Shuffle Skip | 01 = NO SKIP | 00 = SKIP
+     ---------------
+ |   ---------------
+ '-> |     0 0     | Remember Playing POS | 00 = YES | 01 = NO
+     ---------------
+ |   ---------------
+ '-> |     0 0     | uninterruptable_album
+     ---------------
+ |   ---------------
+ '-> |     0 0     | Unknown
+     ---------------
+ |   ---------------
+ '-> |  ???? ????  | Pre gap  | Usage ?
+     ---------------
+ |   ---------------
+ '-> |  ???? ????  | Post gap | ^^^^^^^
+     ---------------
+ |   ---------------
+ '-> |  ???? ????  | Number of samples | Max 4 bytes | May limit quality
+     ---------------
+ |   ---------------
+ '-> |     ? ?     | Unknown file data
+     ---------------
+ |   ---------------
+ '-> |  ???? ????  | Gapless Data | Usage ?
+     ---------------
+ |   ---------------
+ '-> |     ? ?     | Unknown file data 2
+     ---------------
+ |   ---------------
+ '-> |  0000 0000  | Album ID
+     ---------------
+ |   ---------------
+ '-> |    01 00    | Track Number | Max 2 bytes | Reason why multiple folders are needed
+     ---------------
+ |   ---------------
+ '-> |    0? 00    | Disc Number  | As above
+     ---------------
+ |   ---------------
+ '-> |  0000 0000  | Padding
+     |  0000 0000  |
+     ---------------
+ |   ---------------
+ '-> |  0000 0000  | Voiceover filename
+     |  0000 0000  |
+     ---------------
+ |   ---------------
+ '-> |  ???? ????  | Artist ID
+     ---------------
+ |   ---------------
+ ->  |  0000 0000  | Padding
+     |  0000 0000  |
+     |  0000 0000  |
+     |  0000 0000  | 
+     |  0000 0000  | 
+     |  0000 0000  |
+     |  0000 0000  |
+     |  0000 0000  |
+     ---------------
+ ----------------
+ | END OF TRACK |
+ ----------------
+----
+| Playlist Header
+----
