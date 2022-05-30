@@ -11,6 +11,13 @@ Usage & Placement & Meaning
 -- Compared to the 2nd/1st gen versions it is very different with only the hexcode
 ---- for file format remaining the same
 ---
+Byte Usage
+-- Each set of 4 bits is 2 bytes
+---- 0000 0000 = 4 bytes
+----   00 00   = 2 Bytes
+----    0 0    = 1 Bytes*
+------ *: blocks are in sets of 2 bytes
+---
 Layout
 -- base layout of said iTunesSD file
 ----------
@@ -24,11 +31,6 @@ Layout
             -----------
         |
         '-> ...
-  |    ----------------
-  '->  | Track Header |
-       ----------------
-        |
-        '-> ...
   |    -------------------
   '->  | Playlist Header |
        -------------------
@@ -39,9 +41,39 @@ Layout
         '-> | Playlist 2 |
             --------------
 ---
-Hexcode Layout
+Base Hex Layout
 -- Follows same as above but with the literal values
 -- Values are in hex
+--------------------
+| bdhs  0300 0002  | Header
+--------------------
+ |
+ '-> --------
+     | hths | Track Header | Offsets cause max size to be undefined
+     --------
+      |
+      '-> --------
+          | rths | Track #? header | Repeats for each track
+          --------
+      |
+      '-> --------
+          | .... |
+          --------
+ |
+ '-> --------
+     | hphs | Playlists Header | Offsets cause max size to be undefined
+     --------
+      |
+      '-> --------
+          | lphs | Playlist #? header | Repeats for each playlist
+          --------
+      |
+      '-> --------
+          | .... |
+          --------
+---
+Full Hex Layout
+---
 --------------------
 | bdhs  0300 0002  | Header
 --------------------
@@ -87,7 +119,7 @@ Hexcode Layout
  | END OF HEADER |
  -----------------
 --------
-| hths | Track Header
+| hths | Tracks Header | Offsets cause max size to be undefined  
 --------
  |   ---------------
  '-> |  ???? 0000  | Length
@@ -107,20 +139,20 @@ Hexcode Layout
      |  ???? 0000  |
      |  .... ....  |
      ---------------
- -----------------------
- | END OF TRACK HEADER |
- -----------------------
+ ------------------------
+ | END OF TRACKS HEADER |
+ ------------------------
 --------
-| rths | Track #? Header | Repeats for each track
+| rths | Track #? header | Repeats for each track
 --------
  |   ---------------
  '-> |  ???? 0000  | Length
      ---------------
  |   ---------------
- '-> |  ???? ????  | Starting Position | MiliSeconds | Typically 0000 0000
+ '-> |  ???? ????  | Starting position | MiliSeconds | Typically 0000 0000
      ---------------
  |   ---------------
- '-> |  ???? ????  | Ending Position | Length of Track (or less) in MiliSeconds 
+ '-> |  ???? ????  | Ending position | Length of Track (or less) in MiliSeconds 
      ---------------
  |   ---------------
  '-> |  0000 0000  | Volume gain | 00 -> 100
@@ -145,10 +177,10 @@ Hexcode Layout
  '-> |     0 ?     | Shuffle Skip | 01 = NO SKIP | 00 = SKIP
      ---------------
  |   ---------------
- '-> |     0 0     | Remember Playing POS | 00 = YES | 01 = NO
+ '-> |     0 0     | Remember Playing position | 00 = YES | 01 = NO
      ---------------
  |   ---------------
- '-> |     0 0     | uninterruptable_album
+ '-> |     0 0     | `uninterruptable_album` | Meaning/Usage ?
      ---------------
  |   ---------------
  '-> |     0 0     | Unknown
@@ -204,6 +236,71 @@ Hexcode Layout
  ----------------
  | END OF TRACK |
  ----------------
-----
-| Playlist Header
-----
+--------
+| hphs | Playlists Header | Offsets cause max size to be undefined  
+--------
+ |   ---------------
+ '-> |  0000 0000  | Length
+     ---------------
+ |   ---------------
+ '-> |  0000 0000  | Number of Playlist | wiki states size is unknown
+     ---------------
+ |   ---------------
+ '-> |    00 00    | Number of Non-podcast playlists
+     ---------------
+ |   ---------------
+ '-> |    00 00    | Number of master playlists
+     ---------------
+ |   ---------------
+ '-> |    00 00    | Number of Non-audiobook playlists
+     ---------------
+ |   ---------------
+ '-> |    00 00    | Unknown | Possibly Padding
+     ---------------
+ |   ---------------
+ '-> |  0000 0000  | Offset of playlist
+     ---------------
+ |   ---------------
+ '-> |  0000 0000  | Offset of playlist
+     ---------------
+ |   ---------------
+ '-> |  .... ....  | Continuing Offsets
+     ---------------
+ --------------------------
+ | END OF PLAYLIST HEADER |
+ --------------------------
+--------
+| lphs | Playlist #? header | Repeats for each playlist 
+--------
+ |   ---------------
+ '-> |  0000 0000  | Length
+     ---------------
+ |   ---------------
+ '-> |  0000 0000  | Number of songs
+     ---------------
+ |   ---------------
+ '-> |  0000 0000  | Number of Non-podcast/audiobook songs
+     ---------------
+ |   ---------------
+ '-> |  0000 0000  | Voiceover filename
+     |  0000 0000  | 
+     ---------------
+ |   ---------------
+ '-> |  0?00 0000  | Type of playlist | 01 = MASTER | 02 = NORMAL | 03 = PODCASE | 04 = AUDIOBOOK
+     ---------------
+ |   ---------------
+ '-> |  0000 0000  | Unknown | Likely padding
+     |  0000 0000  |
+     |  0000 0000  |
+     |  0000 0000  |
+     ---------------
+ |   ---------------
+ '-> |  0000 0000  | Playlist track
+     ---------------
+ |   ---------------
+ '-> |  .... ....  | Continuing...
+     ---------------
+ -------
+ | END |
+ -------
+---
